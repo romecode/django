@@ -2,7 +2,12 @@ from __future__ import unicode_literals
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+import datetime
+from django.db.models import Q
 
+def perm_filter():
+    today=datetime.date.today()
+    return Q(expires__gte=today)|Q(expires=None)
 
 class ModelBackend(object):
     """
@@ -22,13 +27,15 @@ class ModelBackend(object):
             # difference between an existing and a non-existing user (#20760).
             UserModel().set_password(password)
 
+
+
     def _get_user_permissions(self, user_obj):
-        return user_obj.user_permissions.all()
+        ids = user_obj.userexpiration_set.values_list('permission', flat=True).filter(perm_filter())
+        return Permission.objects.filter(pk__in=set(ids))
 
     def _get_group_permissions(self, user_obj):
-        user_groups_field = get_user_model()._meta.get_field('groups')
-        user_groups_query = 'group__%s' % user_groups_field.related_query_name()
-        return Permission.objects.filter(**{user_groups_query: user_obj})
+        ids = user_obj.groupexpiration_set.values_list('group', flat=True).filter(perm_filter())
+        return Permission.objects.filter(group__id__in=set(ids))
 
     def _get_permissions(self, user_obj, obj, from_name):
         """

@@ -308,16 +308,16 @@ class PermissionsMixin(models.Model):
     is_superuser = models.BooleanField(_('superuser status'), default=False,
         help_text=_('Designates that this user has all permissions without '
                     'explicitly assigning them.'))
-    groups = models.ManyToManyField(Group, verbose_name=_('groups'),
+    groups = models.ManyToManyField(Group, verbose_name=_('groups'),through='GroupExpiration',
         blank=True, help_text=_('The groups this user belongs to. A user will '
                                 'get all permissions granted to each of '
                                 'their groups.'),
         related_name="user_set", related_query_name="user")
-    user_permissions = models.ManyToManyField(Permission,
+    user_permissions = models.ManyToManyField(Permission, through='UserExpiration',
         verbose_name=_('user permissions'), blank=True,
         help_text=_('Specific permissions for this user.'),
         related_name="user_set", related_query_name="user")
-
+    
     class Meta:
         abstract = True
 
@@ -443,6 +443,15 @@ class User(AbstractUser):
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
 
+class UserExpiration(models.Model):
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expires = models.DateField(blank=True,default=None,null=True)
+    
+class GroupExpiration(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expires = models.DateField(blank=True,default=None,null=True)
 
 @python_2_unicode_compatible
 class AnonymousUser(object):

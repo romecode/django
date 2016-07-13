@@ -7,7 +7,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import (
     AdminPasswordChangeForm, UserChangeForm, UserCreationForm,
 )
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, User, UserExpiration, GroupExpiration
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
@@ -37,7 +37,14 @@ class GroupAdmin(admin.ModelAdmin):
         return super(GroupAdmin, self).formfield_for_manytomany(
             db_field, request=request, **kwargs)
 
+class UserPermissionExpiration(admin.TabularInline):
+    model = UserExpiration
+    extra = 1
 
+class GroupPermissionExpiration(admin.TabularInline):
+    model = GroupExpiration
+    extra = 1
+    
 class UserAdmin(admin.ModelAdmin):
     add_form_template = 'admin/auth/user/add_form.html'
     change_user_password_template = None
@@ -45,7 +52,7 @@ class UserAdmin(admin.ModelAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
-                                       'groups', 'user_permissions')}),
+                                       )}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
@@ -54,6 +61,7 @@ class UserAdmin(admin.ModelAdmin):
             'fields': ('username', 'password1', 'password2'),
         }),
     )
+    inlines = (UserPermissionExpiration,GroupPermissionExpiration)
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
