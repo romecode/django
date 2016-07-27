@@ -159,7 +159,7 @@ class BaseUserManager(models.Manager):
         return get_random_string(length, allowed_chars)
 
     def get_by_natural_key(self, username):
-        return self.get(**{self.model.USERNAME_FIELD: username})
+        return self.get(**{self.model.USERNAME_FIELD__iexact: username})
 
 
 class UserManager(BaseUserManager):

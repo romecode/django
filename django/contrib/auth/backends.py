@@ -27,8 +27,6 @@ class ModelBackend(object):
             # difference between an existing and a non-existing user (#20760).
             UserModel().set_password(password)
 
-
-
     def _get_user_permissions(self, user_obj):
         ids = user_obj.userexpiration_set.values_list('permission', flat=True).filter(perm_filter())
         return Permission.objects.filter(pk__in=set(ids))
@@ -73,6 +71,7 @@ class ModelBackend(object):
     def get_all_permissions(self, user_obj, obj=None):
         if not user_obj.is_active or user_obj.is_anonymous() or obj is not None:
             return set()
+        
         if not hasattr(user_obj, '_perm_cache'):
             user_obj._perm_cache = self.get_user_permissions(user_obj)
             user_obj._perm_cache.update(self.get_group_permissions(user_obj))
