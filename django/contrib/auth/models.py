@@ -16,7 +16,6 @@ from django.utils.crypto import get_random_string, salted_hmac
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-
 def update_last_login(sender, user, **kwargs):
     """
     A signal receiver which updates the last_login date for
@@ -159,7 +158,8 @@ class BaseUserManager(models.Manager):
         return get_random_string(length, allowed_chars)
 
     def get_by_natural_key(self, username):
-        return self.get(**{self.model.USERNAME_FIELD__iexact: username})
+        
+        return self.get(**{self.model.USERNAME_FIELD+"__iexact": username})
 
 
 class UserManager(BaseUserManager):
@@ -447,11 +447,14 @@ class UserExpiration(models.Model):
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     expires = models.DateField(blank=True,default=None,null=True)
+    profileid = models.CharField('Recurring ID',max_length=14,blank=True)
     
 class GroupExpiration(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     expires = models.DateField(blank=True,default=None,null=True)
+    profileid = models.CharField('Recurring ID',max_length=14,blank=True)
+    users = models.ManyToManyField(User,verbose_name=_('Additional Users'),related_name='corporate_set',blank=True)
 
 @python_2_unicode_compatible
 class AnonymousUser(object):
@@ -525,3 +528,5 @@ class AnonymousUser(object):
 
     def get_username(self):
         return self.username
+    
+

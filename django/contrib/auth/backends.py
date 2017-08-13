@@ -32,8 +32,10 @@ class ModelBackend(object):
         return Permission.objects.filter(pk__in=set(ids))
 
     def _get_group_permissions(self, user_obj):
-        ids = user_obj.groupexpiration_set.values_list('group', flat=True).filter(perm_filter())
-        return Permission.objects.filter(group__id__in=set(ids))
+        ids = list(user_obj.groupexpiration_set.values_list('group', flat=True).filter(perm_filter()))
+        corp = list(user_obj.corporate_set.values_list('group', flat=True).filter(perm_filter()))
+        
+        return Permission.objects.filter(group__id__in=ids+corp)
 
     def _get_permissions(self, user_obj, obj, from_name):
         """
